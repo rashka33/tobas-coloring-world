@@ -1,0 +1,1128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#FFF8E7" />
+    <meta name="description" content="Toba's Coloring World — coloring pages, songs, stories and games for kids, with recorded Somali and English voices. No account, no sign-up: just open and play." />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Toba's Coloring World" />
+    <meta property="og:description" content="Coloring, songs, stories and games for kids — recorded Somali and English voices. Just open and play." />
+    <meta property="og:image" content="assets/icon.webp" />
+    <!-- Standalone web app: this page plus its assets/ folder is the
+         whole app, built to be hosted independently (GitHub Pages) —
+         no platform wrapper, no account, no sign-in and no sign-up
+         bar; anyone with the link just plays. The freshness metas
+         below tell browsers not to hold on to an old cached copy of
+         the page shell, so a fresh link loads the current build. -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <link rel="manifest" href="assets/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="assets/icon.webp" />
+    <!-- Empty inline icon: stops the browser fetching /favicon.ico, which
+         lives outside the artifact's routes and 404s. -->
+    <link rel="icon" href="data:," />
+    <title>Toba's Coloring World</title>
+    <link rel="stylesheet" href="assets/app.css" />
+    <style>
+      /* First-open name gate + end-of-page developer credit.
+         The gate only appears on a device that has never set a name:
+         it writes the child's name into the app's own profile store
+         (IndexedDB, on this device only) before the app boots, so Leo
+         and friends greet the child by their OWN name everywhere. */
+      #tcw-gate {
+        position: fixed; inset: 0; z-index: 200;
+        background: #FFF8E7; color: #3B2314;
+        display: flex; align-items: center; justify-content: center;
+        padding: 16px; overflow-y: auto;
+        font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+      }
+      #tcw-gate .tcw-card {
+        width: 100%; max-width: 430px; text-align: center;
+        background: #fff; border: 4px solid #FCD34D; border-radius: 28px;
+        padding: 26px 22px 20px; box-shadow: 0 18px 40px rgba(146,64,14,.18);
+      }
+      #tcw-gate .tcw-lion { font-size: 64px; line-height: 1; }
+      #tcw-gate h1 { font-size: 30px; font-weight: 800; margin: 10px 0 4px; line-height: 1.15; }
+      #tcw-gate p { font-weight: 700; opacity: .75; margin: 0 0 16px; font-size: 16px; }
+      #tcw-gate label { display: block; font-weight: 800; font-size: 19px; margin-bottom: 8px; }
+      #tcw-gate input {
+        width: 100%; box-sizing: border-box; text-align: center;
+        font: inherit; font-size: 24px; font-weight: 800; color: #3B2314;
+        padding: 13px 14px; border-radius: 18px;
+        border: 3px solid #DDD6FE; background: #FFF8E7; outline: none;
+      }
+      #tcw-gate input:focus { border-color: #7C3AED; }
+      #tcw-play {
+        width: 100%; margin-top: 16px; min-height: 60px;
+        font: inherit; font-size: 22px; font-weight: 800; color: #fff;
+        background: #059669; border: 0; border-radius: 999px;
+        box-shadow: 0 6px 0 rgba(6,78,59,.35); cursor: pointer;
+      }
+      #tcw-play:active { transform: scale(.97); }
+      #tcw-skip {
+        margin-top: 12px; font: inherit; font-weight: 800; font-size: 16px;
+        color: #7C3AED; background: none; border: 0; cursor: pointer;
+        text-decoration: underline; min-height: 44px;
+      }
+      #tcw-gate .tcw-credit { margin-top: 14px; font-size: 13px; font-weight: 700; opacity: .55; }
+      #tcw-gate .tcw-credit a { color: inherit; }
+      /* Developer credit — sits at the very end of the page, below the app. */
+      #tcw-footer {
+        background: #FFF8E7; color: #3B2314;
+        font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+        text-align: center; padding: 26px 16px 34px;
+        border-top: 3px solid #FDE68A;
+      }
+      #tcw-footer .tcw-made { font-size: 19px; font-weight: 800; margin: 0; }
+      #tcw-footer .tcw-dev { font-weight: 700; opacity: .7; margin: 4px 0 0; font-size: 15px; }
+      #tcw-footer .tcw-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 14px; }
+      #tcw-footer .tcw-links a {
+        display: inline-flex; align-items: center; min-height: 48px;
+        padding: 10px 20px; border-radius: 999px; color: #fff;
+        font-weight: 800; font-size: 16px; text-decoration: none;
+      }
+      #tcw-footer .tcw-ig { background: #DB2777; }
+      #tcw-footer .tcw-etsy { background: #EA580C; }
+      /* "Add to Home Screen" hint — standalone build only. Shown in a
+         browser tab, hidden once the app runs installed/standalone. */
+      #tcw-install { margin-top: 16px; }
+      #tcw-install[hidden] { display: none; }
+      #tcw-install-btn {
+        font: inherit; font-weight: 800; font-size: 16px; cursor: pointer;
+        min-height: 48px; padding: 10px 22px; border-radius: 999px;
+        color: #fff; background: #7C3AED; border: 0;
+        box-shadow: 0 5px 0 rgba(76,29,149,.35);
+      }
+      #tcw-install-btn:active { transform: scale(.97); }
+      #tcw-install-tip { font-weight: 700; opacity: .75; font-size: 14.5px; margin: 10px auto 0; max-width: 420px; }
+      #tcw-install-tip[hidden] { display: none; }
+      /* Audio-ready gate (gateway build): shown ONLY when a recorded
+         sound bundle failed to load. The app never falls back to the
+         device voice — it stays silent and offers this retry instead. */
+      #tcw-audiogate {
+        position: fixed; inset: 0; z-index: 300;
+        background: rgba(59,35,20,.72); color: #3B2314;
+        display: flex; align-items: center; justify-content: center;
+        padding: 16px;
+        font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+      }
+      #tcw-audiogate[hidden] { display: none; }
+      #tcw-audiogate .tcw-ag-card {
+        width: 100%; max-width: 400px; text-align: center;
+        background: #FFF8E7; border: 4px solid #FCD34D; border-radius: 28px;
+        padding: 26px 22px 22px; box-shadow: 0 18px 40px rgba(0,0,0,.3);
+      }
+      #tcw-audiogate h2 { font-size: 24px; font-weight: 800; margin: 6px 0 6px; }
+      #tcw-audiogate p { font-weight: 700; opacity: .78; margin: 0 0 16px; font-size: 16px; }
+      #tcw-audiogate .tcw-ag-emoji { font-size: 52px; line-height: 1; }
+      #tcw-ag-retry {
+        width: 100%; min-height: 58px;
+        font: inherit; font-size: 21px; font-weight: 800; color: #fff;
+        background: #059669; border: 0; border-radius: 999px;
+        box-shadow: 0 6px 0 rgba(6,78,59,.35); cursor: pointer;
+      }
+      #tcw-ag-retry:active { transform: scale(.97); }
+      /* Diagnostics overlay (?diag=1): live values from the running
+         gateway, sized to be readable in a phone screenshot. */
+      #tcw-diag {
+        position: fixed; left: 8px; right: 8px; bottom: 8px; z-index: 400;
+        background: rgba(20,14,8,.94); color: #FDE68A;
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 12.5px; line-height: 1.5; white-space: pre-wrap;
+        word-break: break-word; border: 2px solid #F59E0B; border-radius: 14px;
+        padding: 10px 12px; max-height: 62vh; overflow-y: auto;
+      }
+      @media (prefers-color-scheme: dark) {
+        #tcw-gate { background: #241A10; color: #FDEFD2; }
+        #tcw-gate .tcw-card { background: #33261A; border-color: #92400E; }
+        #tcw-gate input { background: #241A10; color: #FDEFD2; border-color: #6D28D9; }
+        #tcw-footer { background: #241A10; color: #FDEFD2; border-top-color: #92400E; }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Toba's Coloring World — STANDALONE WEB APP (build 2026-10-25-gateway1).
+         This page plus the assets/ folder next to it IS the whole app:
+         it is packaged for independent hosting (GitHub Pages) and runs
+         with no platform wrapper, no account, no sign-in and no
+         sign-up bar. Anyone who opens the link just plays.
+         The full app (Bubble World home, 19 talking animals, coloring,
+         songs, stories with recorded narration, games, dress-up, zoo,
+         memory book, grown-ups) bundled as one classic script.
+         All of her world — pictures, zoo, stickers, outfits, voice clips,
+         settings — saves ON THIS DEVICE in IndexedDB. No server, no
+         account, nothing leaves the phone.
+         On a fresh device, a welcome screen asks the child's name
+         first and saves it as the profile name, so the app greets every
+         kid by their own name (the recorded story voices stay as
+         recorded; on-screen greetings, titles and praise use the name).
+         A grown-up can change the name any time in Grown-ups.
+         Developer credit sits at the end of the page; the Instagram
+         and Etsy links live inside the press-and-hold Grown-ups area
+         only, never on a screen the child can reach.
+         Glow Draw — a home-screen bubble opens a full black canvas
+         with chunky neon markers (rainbow + 8 neon colors), a big
+         eraser, undo, clear and save; saved glow drawings go into the
+         same on-device gallery as every other drawing.
+         AUDIO (gateway build 2026-10-25-gateway1): every spoken event
+         routes through ONE gateway (window.__TCW_GW, installed before
+         the app loads). In Somali mode the gateway may only play the
+         event's registered Ubax recording via Web Audio, or stay
+         silent — there is no device-voice fallback anywhere. English
+         device voice exists only inside the gateway's single adapter.
+         Open the page with ?diag=1 for the live diagnostics overlay. -->
+    <div id="tcw-gate" hidden>
+      <div class="tcw-card">
+        <div class="tcw-lion" aria-hidden="true">🦁</div>
+        <h1>Welcome to Coloring World!</h1>
+        <p>Leo and his friends want to say hello.<br />What&rsquo;s your name? &middot; Magacaa?</p>
+        <form id="tcw-gate-form">
+          <label for="tcw-name-input">My name is&hellip;</label>
+          <input id="tcw-name-input" type="text" maxlength="24" autocomplete="off"
+                 autocapitalize="words" enterkeyhint="go" placeholder="Type your name" />
+          <button id="tcw-play" type="submit">Let&rsquo;s Play! 🎨</button>
+        </form>
+        <button id="tcw-skip" type="button">Just play &rarr;</button>
+        <p class="tcw-credit">Made by <b>Abdirashid Abi</b></p>
+      </div>
+    </div>
+
+    <div id="tcw-audiogate" hidden>
+      <div class="tcw-ag-card">
+        <div class="tcw-ag-emoji" aria-hidden="true">🔊</div>
+        <h2>Sounds didn&rsquo;t load</h2>
+        <p>The recorded voices couldn&rsquo;t load this time, so the app is staying quiet instead of using a robot voice.<br />Codadkii ma soo degin — taabo mar kale.</p>
+        <button id="tcw-ag-retry" type="button">Try again · Isku day mar kale</button>
+      </div>
+    </div>
+
+    <div data-generated-space-root="" data-generated-space-slug="toba-s-coloring-world-link-version"></div>
+
+    <footer id="tcw-footer">
+      <p class="tcw-made">💛 Made for kids, with love</p>
+      <p class="tcw-dev">Developed by <b>Abdirashid Abi</b></p>
+      <p class="tcw-dev" id="tcw-buildstamp">Build 2026-10-25-gateway1</p>
+      <div id="tcw-install" hidden>
+        <button id="tcw-install-btn" type="button">📲 Add Coloring World to your Home Screen</button>
+        <p id="tcw-install-tip" hidden></p>
+      </div>
+    </footer>
+
+    <noscript>
+      <p style="font-family: system-ui, sans-serif; text-align: center; padding: 2rem;">
+        Toba's Coloring World needs JavaScript turned on to play. 🦁
+      </p>
+    </noscript>
+
+    <script>
+      /* AudioManager registry: every <audio> element the app creates
+         is registered here, so navigation can stop ALL playback at
+         once — including song players and recorded voice clips that
+         live outside the two main voice elements. Also owns the
+         hidden diagnostic log (window.__audioDiag) and the last-tap
+         clock. Installed before the app loads. */
+      (function () {
+        window.__audioDiag = [];
+        window.__tcwLastTap = 0;
+        var reg = [];
+        window.__tcwRegistry = reg;
+        window.__tcwStopAllAudio = function () {
+          for (var i = 0; i < reg.length; i++) {
+            try { reg[i].pause(); } catch (e) {}
+          }
+          try { if (window.__TCW_GW) window.__TCW_GW.stopAllSources(); } catch (e) {}
+          try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) {}
+        };
+        try {
+          var OrigAudio = window.Audio;
+          if (typeof OrigAudio === "function") {
+            var WrappedAudio = function () {
+              var el = arguments.length ? new OrigAudio(arguments[0]) : new OrigAudio();
+              reg.push(el);
+              return el;
+            };
+            WrappedAudio.prototype = OrigAudio.prototype;
+            window.Audio = WrappedAudio;
+          }
+        } catch (e) {}
+        function stamp() { window.__tcwLastTap = Date.now(); }
+        document.addEventListener("pointerdown", stamp, true);
+        document.addEventListener("touchend", stamp, true);
+        document.addEventListener("visibilitychange", function () {
+          if (document.hidden) window.__tcwStopAllAudio();
+        });
+      })();
+    </script>
+
+    <script>
+      /* ================================================================
+         SINGLE AUDIO GATEWAY — build 2026-10-25-gateway1.
+         The ONLY speech enforcement in the app (panel verdict, round 3:
+         stop patching around the edges; route everything through one
+         gateway and make Somali recorded-only BY CONSTRUCTION).
+
+         How every spoken event reaches the gateway:
+         - Recorded clips: the app plays sprite segments through two
+           <audio> elements (seek + play). The gateway intercepts
+           HTMLMediaElement.play()/pause() for bundle files, identifies
+           the segment from the app's own registry (parsed out of
+           app.js: TCW_SPR_FILES + TCW_SPR — same keys, same offsets,
+           same contents, Round 6 included), and plays it with Web
+           Audio from a once-decoded AudioBuffer:
+           source.start(0, offset, duration). The <audio> element keeps
+           running MUTED as a silent playhead clock, so the app's own
+           end-of-clip detection, sequencing and callbacks behave
+           exactly as before — only the fragile seek no longer decides
+           what (or whether) the child hears.
+         - Device voice (TTS): the app's text-speech functions call
+           speechSynthesis.speak(). The gateway owns speak(): in Somali
+           mode it NEVER reaches the real engine (blocked + logged);
+           in English mode it is forwarded through ONE isolated
+           adapter (englishTtsAdapter below) — the only code in the
+           page that holds the browser's original speak().
+         - There is NO fallback: a missing key, an unloaded or failed
+           sprite, a decode error, or a policy change mid-flight all
+           resolve to SILENCE plus a diagnostics event. Never to TTS.
+
+         Policy: read from the same signal that renders the UI —
+         window.__tcwSetSo(on), called by the app from its profile
+         React state on load and on every language change (mirrored to
+         data-tcw-so on <html>). Switching language bumps a generation
+         token, cancels the engine synchronously, and stops every
+         sounding Web Audio source; any playback about to start
+         re-checks the token + policy immediately before start().
+
+         Sprites: all 12 bundles are fetched once and decoded with
+         decodeAudioData up front. If any bundle fails, a friendly
+         retry overlay appears — speech paths stay silent against an
+         unloaded sprite set, they never degrade to the device voice.
+
+         Diagnostics: window.__TCW_DIAG__() returns live values;
+         ?diag=1 renders them as an on-screen overlay; the build ID
+         is stamped in the footer and injected into Grown-ups.
+         ================================================================ */
+      (function () {
+        var BUILD_ID = "2026-10-25-gateway1";
+        window.__TCW_BUILD = BUILD_ID;
+
+        var GW = {
+          build: BUILD_ID,
+          gen: 0,               // generation token (policy changes)
+          ready: false,         // all sprites decoded
+          registryOk: false,
+          counters: {
+            ttsAttempts: 0,     // speak() calls that reached the gateway
+            ttsBlocked: 0,      // speak() calls dropped in Somali mode
+            adapterCalls: 0,    // calls that reached the REAL engine (English only)
+            tripwireHits: 0,    // attempts seen by the tripwire layer
+            recorded: 0,        // segments played from AudioBuffers
+            silent: 0           // events resolved to silence
+          },
+          events: [],           // last ~30: {t,key,result,why}
+          sprites: {},          // basename -> PENDING|LOADING|LOADED|FAILED
+          files: [],            // sprite file paths (registry order)
+          buffers: [],          // AudioBuffers by file index
+          stopAllSources: function () {}
+        };
+        window.__TCW_GW = GW;
+
+        function logEvent(key, result, why) {
+          try {
+            GW.events.push({ t: Date.now(), key: String(key || "?").slice(0, 64), result: result, why: why ? String(why).slice(0, 60) : "" });
+            if (GW.events.length > 30) GW.events.shift();
+            if (result === "MISSING_SILENT" || result === "FAILED_SILENT") GW.counters.silent++;
+            window.__audioDiag = window.__audioDiag || [];
+            window.__audioDiag.push({ t: Date.now(), gw: result, key: String(key || "?").slice(0, 64), why: why ? String(why).slice(0, 60) : "" });
+            if (window.__audioDiag.length > 400) window.__audioDiag.shift();
+            renderDiag();
+          } catch (e) {}
+        }
+        GW.logEvent = logEvent;
+
+        /* ---------- language policy (same signal as the UI) ---------- */
+        window.__tcwSoFlag = false;
+        var soKnown = null;
+        function prefsSo() {
+          try { return !!JSON.parse(window.localStorage.getItem("tcw-prefs") || "{}").so; } catch (e) { return false; }
+        }
+        function stateSo() {
+          try {
+            var s = JSON.parse(window.localStorage.getItem("tcw-state") || "null");
+            return !!(s && s.profile && s.profile.soomaali);
+          } catch (e) { return false; }
+        }
+        function datasetSo() {
+          try { return document.documentElement.getAttribute("data-tcw-so") === "1"; } catch (e) { return false; }
+        }
+        window.__tcwSomaliOn = function () {
+          if (soKnown !== null) return soKnown;
+          try { if (window.__tcwSoFlag) return true; } catch (e) {}
+          return datasetSo() || prefsSo() || stateSo();
+        };
+        function noteSo(on) {
+          window.__tcwSoFlag = !!on;
+          try { document.documentElement.setAttribute("data-tcw-so", on ? "1" : "0"); } catch (e) {}
+        }
+        // Called by the app from the SAME React state that renders the
+        // UI language. A switch cancels outstanding speech
+        // synchronously and invalidates in-flight playback.
+        window.__tcwSetSo = function (on) {
+          var next = !!on;
+          var changed = soKnown !== next;
+          soKnown = next;
+          noteSo(next);
+          if (changed) {
+            GW.gen++;
+            try { GW.stopAllSources(); } catch (e) {}
+            try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) {}
+          }
+          renderDiag();
+        };
+        if (prefsSo() || stateSo() || datasetSo()) { soKnown = true; noteSo(true); }
+        // Read the saved profile straight from IndexedDB (only when
+        // the database already exists) so the policy is right before
+        // the app boots; retried because the gate/app may write the
+        // profile moments after this script runs.
+        var profileDone = false;
+        function readProfile() {
+          try {
+            if (!window.indexedDB || profileDone) return;
+            var go = function () {
+              try {
+                var rq = window.indexedDB.open("toba-coloring-world-link", 1);
+                rq.onsuccess = function () {
+                  try {
+                    var db = rq.result;
+                    if (!db.objectStoreNames.contains("profile")) { db.close(); return; }
+                    var g = db.transaction("profile", "readonly").objectStore("profile").get(1);
+                    g.onsuccess = function () {
+                      try {
+                        var r = g.result;
+                        if (r) { profileDone = true; if (soKnown === null) { soKnown = !!(r.soomaali === 1 || r.soomaali === true); noteSo(soKnown); renderDiag(); } }
+                      } catch (e) {}
+                      try { db.close(); } catch (e) {}
+                    };
+                    g.onerror = function () { try { db.close(); } catch (e) {} };
+                  } catch (e) {}
+                };
+                rq.onerror = function () {};
+                rq.onblocked = function () {};
+              } catch (e) {}
+            };
+            // Only ever open a database that ALREADY exists. Opening
+            // a missing one would create it empty (no stores) before
+            // the name gate / app create them properly, which breaks
+            // first setup on devices where localStorage survived but
+            // IndexedDB was evicted. databases() is the only proof of
+            // existence used — no localStorage hints.
+            if (window.indexedDB.databases) {
+              window.indexedDB.databases().then(function (dbs) {
+                try { if (dbs && dbs.some(function (d) { return d && d.name === "toba-coloring-world-link"; })) go(); } catch (e) {}
+              }).catch(function () {});
+            }
+          } catch (e) {}
+        }
+        readProfile();
+        window.setTimeout(readProfile, 600);
+        window.setTimeout(readProfile, 2000);
+        window.setTimeout(readProfile, 5000);
+        window.setTimeout(readProfile, 12000);
+
+        /* ---------- Web Audio sprite engine ---------- */
+        var actx = null;
+        function ensureCtx() {
+          if (!actx) {
+            try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; }
+          }
+          if (actx && actx.state === "suspended") { try { actx.resume(); } catch (e) {} }
+          return actx;
+        }
+        // Unlock/resume on the first taps (the sound-on tap included).
+        document.addEventListener("pointerdown", function () { ensureCtx(); }, true);
+        document.addEventListener("touchend", function () { ensureCtx(); }, true);
+
+        var activeSources = [];           // sounding BufferSources
+        var elSource = {};                // element uid -> source
+        var elUid = 0;
+        GW.stopAllSources = function () {
+          for (var i = 0; i < activeSources.length; i++) {
+            try { activeSources[i].stop(); } catch (e) {}
+          }
+          activeSources = [];
+          elSource = {};
+        };
+        function trackSource(src, el) {
+          activeSources.push(src);
+          if (el) {
+            if (!el.__tcwGwUid) { try { el.__tcwGwUid = ++elUid; } catch (e) {} }
+            if (el.__tcwGwUid) elSource[el.__tcwGwUid] = src;
+          }
+          src.onended = function () {
+            var i = activeSources.indexOf(src);
+            if (i >= 0) activeSources.splice(i, 1);
+          };
+        }
+        function stopElSource(el) {
+          try {
+            if (el && el.__tcwGwUid && elSource[el.__tcwGwUid]) {
+              try { elSource[el.__tcwGwUid].stop(); } catch (e) {}
+              delete elSource[el.__tcwGwUid];
+            }
+          } catch (e) {}
+        }
+
+        // Registry parsed from the app's own bundle — identical keys,
+        // offsets and bundle contents; nothing re-mapped here.
+        var sprMap = null;                // hashed basename -> [fileIdx, offMs, durMs]
+        var byIdx = {};                   // fileIdx -> [[basename, offMs, durMs], ...]
+        var fileIdxByBase = {};           // bundle basename -> fileIdx
+        function friendlyKey(base) {
+          return String(base || "?").replace(/-[a-z0-9]{8}\.mp3$/i, "").replace(/\.mp3$/i, "");
+        }
+        function parseRegistry(text) {
+          var fi = text.indexOf("TCW_SPR_FILES=");
+          if (fi < 0) return false;
+          var fEnd = text.indexOf("];", fi);
+          var files = JSON.parse(text.slice(fi + "TCW_SPR_FILES=".length, fEnd + 1));
+          var mi = text.indexOf("TCW_SPR={", fi);
+          if (mi < 0) return false;
+          var mEnd = text.indexOf("};function tcwSeg", mi);
+          if (mEnd < 0) mEnd = text.indexOf("};", mi);
+          var map = JSON.parse(text.slice(mi + "TCW_SPR=".length, mEnd + 1));
+          GW.files = files;
+          sprMap = map;
+          for (var b in map) {
+            if (!Object.prototype.hasOwnProperty.call(map, b)) continue;
+            var e = map[b];
+            if (!byIdx[e[0]]) byIdx[e[0]] = [];
+            byIdx[e[0]].push([b, e[1], e[2]]);
+          }
+          files.forEach(function (f, i) {
+            var base = String(f).split("/").pop();
+            fileIdxByBase[base] = i;
+            if (!GW.sprites[base]) GW.sprites[base] = "PENDING";
+          });
+          GW.registryOk = true;
+          return true;
+        }
+
+        function decodeBuf(ab) {
+          return new Promise(function (resolve, reject) {
+            var ctx = ensureCtx();
+            if (!ctx) { reject(new Error("no AudioContext")); return; }
+            var done = false;
+            try {
+              var p = ctx.decodeAudioData(ab, function (buf) { if (!done) { done = true; resolve(buf); } },
+                                               function (err) { if (!done) { done = true; reject(err || new Error("decode failed")); } });
+              if (p && p.then) p.then(function (buf) { if (!done) { done = true; resolve(buf); } },
+                                     function (err) { if (!done) { done = true; reject(err); } });
+            } catch (e) { reject(e); }
+          });
+        }
+        function loadOne(i) {
+          var f = GW.files[i];
+          var base = String(f).split("/").pop();
+          if (GW.sprites[base] === "LOADED") return Promise.resolve(true);
+          GW.sprites[base] = "LOADING";
+          renderDiag();
+          return fetch(f)
+            .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.arrayBuffer(); })
+            .then(function (ab) { return decodeBuf(ab); })
+            .then(function (buf) {
+              GW.buffers[i] = buf;
+              GW.sprites[base] = "LOADED";
+              checkReady();
+              renderDiag();
+              return true;
+            })
+            .catch(function () {
+              GW.sprites[base] = "FAILED";
+              logEvent(base, "FAILED_SILENT", "sprite fetch/decode failed");
+              checkReady();
+              renderDiag();
+              return false;
+            });
+        }
+        function loadSprites() {
+          var jobs = [];
+          for (var i = 0; i < GW.files.length; i++) jobs.push(loadOne(i));
+          return Promise.all(jobs);
+        }
+        GW.reloadSprites = function () { hideAudioGate(); return loadSprites(); };
+        function anyFailed() {
+          for (var b in GW.sprites) if (GW.sprites[b] === "FAILED") return true;
+          return false;
+        }
+        function checkReady() {
+          var all = GW.files.length > 0;
+          for (var i = 0; i < GW.files.length; i++) {
+            var base = String(GW.files[i]).split("/").pop();
+            if (GW.sprites[base] !== "LOADED") all = false;
+          }
+          GW.ready = all;
+          if (all) { hideAudioGate(); flushPending(); }
+          else if (anyFailed()) showAudioGate();
+        }
+        // A spoken event that arrives while its sprite is still
+        // loading is QUEUED (latest one only) and played the moment
+        // the sprite set is ready — never dropped, never converted
+        // to the device voice. Stale or cross-language queue entries
+        // are discarded by the generation/policy re-check in
+        // playSegment().
+        var pendingSeg = null;
+        function flushPending() {
+          if (!pendingSeg) return;
+          var p = pendingSeg;
+          pendingSeg = null;
+          if (Date.now() - p.t > 8000) { logEvent(friendlyKey(p.seg.base), "MISSING_SILENT", "queued too long"); return; }
+          playSegment(p.seg, p.vol, p.el);
+        }
+        function showAudioGate() {
+          var g = document.getElementById("tcw-audiogate");
+          if (g) g.hidden = false;
+        }
+        function hideAudioGate() {
+          var g = document.getElementById("tcw-audiogate");
+          if (g) g.hidden = true;
+        }
+        document.addEventListener("DOMContentLoaded", function () {
+          var btn = document.getElementById("tcw-ag-retry");
+          if (btn) btn.addEventListener("click", function () { ensureCtx(); GW.reloadSprites(); });
+        });
+
+        // Fetch the app bundle once to read its sprite registry, then
+        // fetch + decode every bundle. The app itself loads right
+        // after (same URL, browser-cached).
+        try {
+          fetch("assets/app.js?build=" + BUILD_ID)
+            .then(function (r) { return r.text(); })
+            .then(function (text) {
+              if (parseRegistry(text)) { loadSprites(); }
+              else { logEvent("registry", "FAILED_SILENT", "sprite registry not found in bundle"); showAudioGate(); }
+            })
+            .catch(function () { logEvent("registry", "FAILED_SILENT", "bundle fetch failed"); showAudioGate(); });
+        } catch (e) { logEvent("registry", "FAILED_SILENT", "fetch unavailable"); }
+
+        /* ---------- segment playback (Web Audio) ---------- */
+        function findSegment(srcUrl, ctSec) {
+          if (!sprMap) return null;
+          var base = String(srcUrl || "").split("/").pop().split("?")[0];
+          var idx = fileIdxByBase[base];
+          if (idx == null) return null;
+          var list = byIdx[idx] || [];
+          var best = null, bestD = 0.45;   // playhead sits ~0.07s before the segment start
+          for (var i = 0; i < list.length; i++) {
+            var d = Math.abs(list[i][1] / 1000 - ctSec);
+            if (d < bestD) { bestD = d; best = { base: list[i][0], idx: idx, off: list[i][1], dur: list[i][2] }; }
+          }
+          return best;
+        }
+        function playSegment(seg, vol, el) {
+          var key = friendlyKey(seg.base);
+          var genAtCall = GW.gen;
+          // Policy: an English bundle segment must never sound in
+          // Somali mode (upstream routing already prevents this; the
+          // gateway refuses regardless of caller).
+          if (window.__tcwSomaliOn() && seg.idx <= 3) {
+            logEvent(key, "MISSING_SILENT", "english clip in somali mode");
+            return;
+          }
+          var buf = GW.buffers[seg.idx];
+          if (!buf) {
+            var st = GW.sprites[GW.files[seg.idx].split("/").pop()];
+            if (st === "FAILED") {
+              logEvent(key, "FAILED_SILENT", "sprite failed");
+              showAudioGate();
+            } else {
+              // Still loading: queue for the moment the sprite set
+              // is ready instead of losing the line.
+              pendingSeg = { seg: seg, vol: vol, el: el, t: Date.now() };
+              logEvent(key, "MISSING_SILENT", "queued until sprites ready");
+            }
+            return;
+          }
+          var ctx = ensureCtx();
+          if (!ctx) { logEvent(key, "FAILED_SILENT", "no AudioContext"); return; }
+          // Generation re-check immediately before playback starts:
+          // a segment queued in one language must never land in the other.
+          if (genAtCall !== GW.gen) { logEvent(key, "MISSING_SILENT", "language changed"); return; }
+          if (window.__tcwSomaliOn() && seg.idx <= 3) { logEvent(key, "MISSING_SILENT", "policy recheck"); return; }
+          try {
+            var srcNode = ctx.createBufferSource();
+            srcNode.buffer = buf;
+            var g = ctx.createGain();
+            var v = (typeof vol === "number" && isFinite(vol)) ? vol : 0.9;
+            g.gain.value = Math.max(0, Math.min(1, v));
+            srcNode.connect(g);
+            g.connect(ctx.destination);
+            trackSource(srcNode, el);
+            srcNode.start(0, Math.max(0, seg.off / 1000), seg.dur / 1000 + 0.15);
+            GW.counters.recorded++;
+            logEvent(key, "RECORDED", GW.files[seg.idx].split("/").pop());
+          } catch (e) {
+            logEvent(key, "FAILED_SILENT", "start: " + (e && e.name ? e.name : "error"));
+          }
+        }
+        // Probe/test hook: play a registered clip by key prefix.
+        GW.playKey = function (prefix) {
+          if (!sprMap) return false;
+          for (var b in sprMap) {
+            if (Object.prototype.hasOwnProperty.call(sprMap, b) && friendlyKey(b).indexOf(prefix) === 0) {
+              var e = sprMap[b];
+              playSegment({ base: b, idx: e[0], off: e[1], dur: e[2] }, 0.9, null);
+              return true;
+            }
+          }
+          logEvent(prefix, "MISSING_SILENT", "no such registry key");
+          return false;
+        };
+
+        /* ---------- <audio> interception: Web Audio sound,
+           element kept as the app's silent playhead clock ---------- */
+        try {
+          var proto = window.HTMLMediaElement && window.HTMLMediaElement.prototype;
+          if (proto && !proto.__tcwGwPlay) {
+            var origPlay = proto.play;
+            var origPause = proto.pause;
+            proto.play = function () {
+              try {
+                if (this.tagName === "AUDIO") {
+                  var src = this.currentSrc || this.src || "";
+                  if (/bundle-(en|so)-/.test(src)) {
+                    // A bundle file NEVER sounds through the element:
+                    // mute it unconditionally (it stays a silent
+                    // playhead clock) and let Web Audio — or silence —
+                    // be the only sound. No seek fallback.
+                    try { this.muted = true; this.__tcwGwMuted = true; } catch (e) {}
+                    var ct = 0;
+                    try { ct = this.currentTime || 0; } catch (e) {}
+                    var seg = findSegment(src, ct);
+                    if (seg) {
+                      var vol = 0.9;
+                      try { vol = this.volume; } catch (e) {}
+                      if (vol > 0) playSegment(seg, vol, this);
+                    } else {
+                      logEvent(src.split("/").pop(), "FAILED_SILENT", "no segment match at playhead — element muted");
+                    }
+                  } else if (this.__tcwGwMuted) {
+                    try { this.muted = false; this.__tcwGwMuted = false; } catch (e) {}
+                  }
+                }
+              } catch (e) {}
+              return origPlay.apply(this, arguments);
+            };
+            proto.pause = function () {
+              try { stopElSource(this); } catch (e) {}
+              return origPause.apply(this, arguments);
+            };
+            proto.__tcwGwPlay = true;
+          }
+        } catch (e) {}
+
+        /* ---------- device voice: ONE isolated adapter ---------- */
+        var realSpeak = null;   // the browser's original speak() — held ONLY here
+        function englishTtsAdapter(owner, utt) {
+          // The single path to the real speech engine in the whole
+          // page. Reachable only from the gateway's speak() wrapper,
+          // and only when the current language is English.
+          if (window.__tcwSomaliOn()) {
+            GW.counters.ttsBlocked++;
+            logEvent(utt && utt.text ? utt.text : "tts", "TTS_BLOCKED", "adapter refused in somali mode");
+            return;
+          }
+          GW.counters.adapterCalls++;
+          logEvent(utt && utt.text ? utt.text : "tts", "ENGLISH_TTS", "");
+          return realSpeak.call(owner, utt);
+        }
+        GW.speakText = function (text) {
+          // Gateway entry for text speech (used by diagnostics/tests).
+          if (window.__tcwSomaliOn()) {
+            GW.counters.ttsAttempts++;
+            GW.counters.ttsBlocked++;
+            logEvent(text, "TTS_BLOCKED", "gateway speakText in somali mode");
+            return false;
+          }
+          try {
+            var ss = window.speechSynthesis;
+            if (!ss) return false;
+            GW.counters.ttsAttempts++;
+            englishTtsAdapter(ss, new window.SpeechSynthesisUtterance(String(text)));
+            return true;
+          } catch (e) { return false; }
+        };
+        function wrapSpeak(owner) {
+          try {
+            if (!owner || typeof owner.speak !== "function" || owner.__tcwGateway) return;
+            var orig = owner.speak;
+            if (!realSpeak) realSpeak = orig;
+            owner.speak = function (utt) {
+              GW.counters.ttsAttempts++;
+              if (window.__tcwSomaliOn()) {
+                GW.counters.ttsBlocked++;
+                logEvent(utt && utt.text ? utt.text : "tts", "TTS_BLOCKED", "speak() dropped by gateway");
+                return;
+              }
+              return englishTtsAdapter(owner, utt);
+            };
+            owner.__tcwGateway = true;
+          } catch (e) {}
+        }
+        function applySpeakPatch() {
+          try {
+            var ss = window.speechSynthesis;
+            if (ss) { wrapSpeak(ss); try { wrapSpeak(Object.getPrototypeOf(ss)); } catch (e) {} }
+            try { if (window.SpeechSynthesis) wrapSpeak(window.SpeechSynthesis.prototype); } catch (e) {}
+          } catch (e) {}
+        }
+        GW.applySpeakPatch = applySpeakPatch;
+        applySpeakPatch();
+        var patchTries = 0;
+        var patchTimer = window.setInterval(function () {
+          applySpeakPatch();
+          if (++patchTries >= 30) window.clearInterval(patchTimer);
+        }, 1000);
+        document.addEventListener("pointerdown", applySpeakPatch, true);
+
+        /* ---------- diagnostics ---------- */
+        function spriteSummary() {
+          var out = [];
+          for (var i = 0; i < GW.files.length; i++) {
+            var base = String(GW.files[i]).split("/").pop();
+            out.push(base.replace(".mp3", "") + ":" + (GW.sprites[base] || "?"));
+          }
+          return out.join("  ");
+        }
+        window.__TCW_DIAG__ = function () {
+          var so = window.__tcwSomaliOn();
+          return {
+            build: BUILD_ID,
+            lang: so ? "so" : "en",
+            policy: so ? "RECORDED_ONLY" : "GATEWAY_TTS",
+            audioReady: GW.ready,
+            registryOk: GW.registryOk,
+            sprites: GW.sprites,
+            counters: {
+              ttsAttempts: GW.counters.ttsAttempts,
+              ttsBlocked: GW.counters.ttsBlocked,
+              adapterCalls: GW.counters.adapterCalls,
+              tripwireHits: GW.counters.tripwireHits,
+              recorded: GW.counters.recorded,
+              silent: GW.counters.silent
+            },
+            events: GW.events.slice(-10)
+          };
+        };
+        var diagEl = null;
+        function renderDiag() {
+          if (!diagEl) return;
+          try {
+            var d = window.__TCW_DIAG__();
+            var lines = [];
+            lines.push("TCW DIAG · build " + d.build);
+            lines.push("LANG " + (d.lang === "so" ? "SOMALI" : "ENGLISH") + " · POLICY " + d.policy + " · AUDIO " + (d.audioReady ? "READY" : "NOT-READY"));
+            lines.push("SPRITES " + (spriteSummary() || "(registry pending)"));
+            lines.push("TTS attempts " + d.counters.ttsAttempts + " · blocked " + d.counters.ttsBlocked + " · engine(adapter) " + d.counters.adapterCalls + " · tripwire " + d.counters.tripwireHits);
+            lines.push("RECORDED " + d.counters.recorded + " · SILENT " + d.counters.silent);
+            lines.push("LAST EVENTS:");
+            if (!d.events.length) lines.push("  (none yet)");
+            for (var i = 0; i < d.events.length; i++) {
+              var ev = d.events[i];
+              lines.push("  " + ev.key + " → " + ev.result + (ev.why ? " (" + ev.why + ")" : ""));
+            }
+            diagEl.textContent = lines.join("\n");
+          } catch (e) {}
+        }
+        GW.renderDiag = renderDiag;
+        if (/[?&]diag=1/.test(window.location.search) || window.location.hash === "#diag") {
+          document.addEventListener("DOMContentLoaded", function () {
+            diagEl = document.createElement("div");
+            diagEl.id = "tcw-diag";
+            document.body.appendChild(diagEl);
+            renderDiag();
+            window.setInterval(renderDiag, 700);
+          });
+        }
+
+        /* ---------- build stamp in Grown-ups ---------- */
+        function stampGrownUps() {
+          try {
+            var all = document.querySelectorAll("h1,h2,h3,button,div,span");
+            for (var i = 0; i < all.length; i++) {
+              var el = all[i];
+              if (el.__tcwStamped) continue;
+              var t = (el.textContent || "").trim();
+              if ((t === "Grown-ups" || t === "Grown-Ups" || t.indexOf("Grown-ups") === 0) && el.children.length <= 3) {
+                el.__tcwStamped = true;
+                var s = document.createElement("span");
+                s.textContent = " · Build " + BUILD_ID;
+                s.style.cssText = "font-size:12px;font-weight:700;opacity:.55;";
+                el.appendChild(s);
+              }
+            }
+          } catch (e) {}
+        }
+        window.setInterval(stampGrownUps, 1500);
+      })();
+    </script>
+
+    <script>
+      /* Tripwire (defense in depth — LOGS, never enforces, never calls
+         the real engine): wraps the gateway's speak() one more time so
+         every device-voice attempt is counted in diagnostics even if a
+         future caller bypasses the app's own guards. Enforcement lives
+         in the gateway above; this layer only observes and delegates. */
+      (function () {
+        function wrapTripwire(owner) {
+          try {
+            if (!owner || typeof owner.speak !== "function" || owner.__tcwTripwire) return;
+            var inner = owner.speak;
+            owner.speak = function (utt) {
+              try {
+                if (window.__TCW_GW) window.__TCW_GW.counters.tripwireHits++;
+              } catch (e) {}
+              return inner.call(this, utt);
+            };
+            owner.__tcwTripwire = true;
+          } catch (e) {}
+        }
+        function apply() {
+          try {
+            var ss = window.speechSynthesis;
+            if (ss) { wrapTripwire(ss); try { wrapTripwire(Object.getPrototypeOf(ss)); } catch (e) {} }
+            try { if (window.SpeechSynthesis) wrapTripwire(window.SpeechSynthesis.prototype); } catch (e) {}
+          } catch (e) {}
+        }
+        apply();
+        var tries = 0;
+        var timer = window.setInterval(function () {
+          apply();
+          if (++tries >= 30) window.clearInterval(timer);
+        }, 1000);
+        document.addEventListener("pointerdown", apply, true);
+      })();
+    </script>
+
+    <script>
+      (function () {
+        var DB_NAME = "toba-coloring-world-link";
+        var FLAG = "tcw-name-chosen";
+        var loaded = false;
+
+        function loadApp() {
+          if (loaded) return;
+          loaded = true;
+          var gate = document.getElementById("tcw-gate");
+          if (gate) gate.hidden = true;
+          var s = document.createElement("script");
+          s.src = "assets/app.js?build=" + (window.__TCW_BUILD || "2026-10-25-gateway1");
+          document.body.appendChild(s);
+        }
+
+        function markChosen() {
+          try { window.localStorage.setItem(FLAG, "1"); } catch (e) {}
+        }
+        function alreadyChosen() {
+          try { return !!window.localStorage.getItem(FLAG); } catch (e) { return false; }
+        }
+
+        // Same store schema the app itself creates (assets/app.js OE()).
+        function createStores(db) {
+          function add(name, opts) {
+            if (!db.objectStoreNames.contains(name)) db.createObjectStore(name, opts);
+          }
+          add("profile", { keyPath: "id" });
+          add("artworks", { keyPath: "id", autoIncrement: true });
+          add("completions", { keyPath: "pageId" });
+          add("zoo", { keyPath: "animalId" });
+          add("stickers", { keyPath: "stickerId" });
+          add("voiceClips", { keyPath: "id", autoIncrement: true });
+          add("activity", { keyPath: "key" });
+        }
+
+        function openDb() {
+          return new Promise(function (resolve, reject) {
+            var rq;
+            try { rq = window.indexedDB.open(DB_NAME, 1); }
+            catch (e) { reject(e); return; }
+            rq.onupgradeneeded = function () { createStores(rq.result); };
+            rq.onsuccess = function () { resolve(rq.result); };
+            rq.onerror = function () { reject(rq.error || new Error("IndexedDB open failed")); };
+            rq.onblocked = function () { reject(new Error("IndexedDB blocked")); };
+          });
+        }
+
+        // A device counts as "already set up" when it has a profile whose
+        // name was picked (not the untouched default) or a world with
+        // anything in it — Toba's own phone never sees the gate.
+        function checkSetup(db) {
+          return new Promise(function (resolve) {
+            var done = function (v) { resolve(v); }; // caller owns closing db
+            try {
+              if (!db.objectStoreNames.contains("profile")) { done(false); return; }
+              var tx = db.transaction(["profile", "artworks", "zoo"], "readonly");
+              var profileReq = tx.objectStore("profile").get(1);
+              var artReq = tx.objectStore("artworks").count();
+              var zooReq = tx.objectStore("zoo").count();
+              var profile, arts, zoo, pending = 3;
+              function step() {
+                if (--pending > 0) return;
+                var named = profile && profile.childName && profile.childName !== "Toba";
+                done(!!(named || (arts || 0) > 0 || (zoo || 0) > 0));
+              }
+              profileReq.onsuccess = function () { profile = profileReq.result; step(); };
+              profileReq.onerror = function () { step(); };
+              artReq.onsuccess = function () { arts = artReq.result; step(); };
+              artReq.onerror = function () { step(); };
+              zooReq.onsuccess = function () { zoo = zooReq.result; step(); };
+              zooReq.onerror = function () { step(); };
+            } catch (e) { done(true); } // can't read it -> never trap the app
+          });
+        }
+
+        // Merge, never wipe: if this device already has a profile (the
+        // gate can reappear when the "name chosen" flag is gone but the
+        // saved world is not), only the child's name changes — existing
+        // soomaali, volume, settings, outfits and every other saved
+        // field survive. Defaults fill in only fields that are missing.
+        function saveName(db, name) {
+          return new Promise(function (resolve) {
+            try {
+              var tx = db.transaction("profile", "readwrite");
+              var store = tx.objectStore("profile");
+              var getReq = store.get(1);
+              getReq.onsuccess = function () {
+                var rec = getReq.result || {};
+                rec.id = 1;
+                rec.childName = name;
+                if (rec.email === undefined) rec.email = "";
+                if (rec.soomaali === undefined) rec.soomaali = 0;
+                if (rec.musicOn === undefined) rec.musicOn = 1;
+                if (rec.outfitsJson === undefined) rec.outfitsJson = "{}";
+                if (rec.settingsJson === undefined) rec.settingsJson = "{}";
+                if (rec.volume === undefined) rec.volume = 0.9;
+                rec.updatedAt = Date.now();
+                store.put(rec);
+              };
+              getReq.onerror = function () {
+                store.put({
+                  id: 1, childName: name, email: "", soomaali: 0, musicOn: 1,
+                  outfitsJson: "{}", settingsJson: "{}", volume: 0.9,
+                  updatedAt: Date.now()
+                });
+              };
+              tx.oncomplete = function () { try { db.close(); } catch (e) {} resolve(true); };
+              tx.onerror = function () { resolve(false); };
+            } catch (e) { resolve(false); }
+          });
+        }
+
+        function showGate(db) {
+          var gate = document.getElementById("tcw-gate");
+          var input = document.getElementById("tcw-name-input");
+          gate.hidden = false;
+          function finish(name) {
+            markChosen();
+            // Skipping still saves a name — "Friend" — so a visiting
+            // child is never greeted as "Toba" by default. A grown-up
+            // can change it any time in Grown-ups.
+            saveName(db, name || "Friend").then(function () { loadApp(); });
+          }
+          document.getElementById("tcw-gate-form").addEventListener("submit", function (ev) {
+            ev.preventDefault();
+            var name = (input.value || "").replace(/[<>&"]/g, "").trim().slice(0, 24);
+            finish(name);
+          });
+          document.getElementById("tcw-skip").addEventListener("click", function () { finish(""); });
+          try { input.focus(); } catch (e) {}
+        }
+
+        // Fail-open: anything unexpected (no IndexedDB, blocked, slow)
+        // just loads the app exactly as before.
+        var failTimer = window.setTimeout(loadApp, 3000);
+        function settle(fn) {
+          window.clearTimeout(failTimer);
+          fn();
+        }
+
+        if (alreadyChosen() || !window.indexedDB) {
+          settle(loadApp);
+        } else {
+          openDb().then(function (db) {
+            if (loaded) { try { db.close(); } catch (e) {} return; } // fail-open timer won
+            checkSetup(db).then(function (setup) {
+              if (loaded) { try { db.close(); } catch (e) {} return; }
+              if (setup) {
+                markChosen();
+                try { db.close(); } catch (e) {}
+                settle(loadApp);
+              } else {
+                settle(function () { showGate(db); });
+              }
+            });
+          }).catch(function () { settle(loadApp); });
+        }
+      })();
+    </script>
+    <script>
+      /* Standalone / install handling (standalone build): when the app
+         is opened from a home-screen icon (display-mode: standalone,
+         or iOS navigator.standalone) it runs as its own app and the
+         install hint stays hidden. In a plain browser tab the footer
+         shows an "Add to Home Screen" button: on Android/Chrome it
+         fires the real install prompt when the browser offers one;
+         on iPhone Safari it shows the Share → Add to Home Screen
+         steps. No account, no wrapper — the hint is the app's own. */
+      (function () {
+        var wrap = document.getElementById("tcw-install");
+        var btn = document.getElementById("tcw-install-btn");
+        var tip = document.getElementById("tcw-install-tip");
+        if (!wrap || !btn) return;
+        function isStandalone() {
+          try {
+            if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return true;
+            if (window.matchMedia && window.matchMedia("(display-mode: fullscreen)").matches) return true;
+          } catch (e) {}
+          try { if (window.navigator && window.navigator.standalone === true) return true; } catch (e) {}
+          return false;
+        }
+        if (isStandalone()) { wrap.hidden = true; return; }
+        wrap.hidden = false;
+        var deferred = null;
+        window.addEventListener("beforeinstallprompt", function (ev) {
+          ev.preventDefault();
+          deferred = ev;
+        });
+        window.addEventListener("appinstalled", function () { wrap.hidden = true; });
+        btn.addEventListener("click", function () {
+          if (deferred) {
+            var d = deferred;
+            deferred = null;
+            try {
+              d.prompt();
+              if (d.userChoice && d.userChoice.then) {
+                d.userChoice.then(function (c) { if (c && c.outcome === "accepted") wrap.hidden = true; });
+              }
+              return;
+            } catch (e) {}
+          }
+          var ua = (window.navigator && window.navigator.userAgent) || "";
+          if (/iphone|ipad|ipod/i.test(ua)) {
+            tip.textContent = "On iPhone: tap the Share button (the square with an arrow), then tap “Add to Home Screen”. Coloring World then opens like its own app — no sign-up, ever.";
+          } else if (/android/i.test(ua)) {
+            tip.textContent = "On Android: tap the ⋮ menu in Chrome, then tap “Add to Home screen” (or “Install app”). Coloring World then opens like its own app — no sign-up, ever.";
+          } else {
+            tip.textContent = "In your browser menu, choose “Add to Home Screen” or “Install app”. Coloring World then opens like its own app — no sign-up, ever.";
+          }
+          tip.hidden = false;
+        });
+      })();
+    </script>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "eba91a29a157438fa8e3d8ebedfb2f0b"}'></script><!-- End Cloudflare Web Analytics -->
+  </body>
+</html>
