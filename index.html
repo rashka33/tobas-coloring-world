@@ -59,17 +59,30 @@
       }
       #tcw-gate input:focus { border-color: #7C3AED; }
       #tcw-play {
-        width: 100%; margin-top: 16px; min-height: 60px;
-        font: inherit; font-size: 22px; font-weight: 800; color: #fff;
-        background: #059669; border: 0; border-radius: 999px;
-        box-shadow: 0 6px 0 rgba(6,78,59,.35); cursor: pointer;
+        width: 100%; margin-top: 8px; min-height: 140px;
+        font: inherit; font-size: 36px; font-weight: 800; color: #fff;
+        background: linear-gradient(180deg, #34d399 0%, #059669 100%);
+        border: 0; border-radius: 28px;
+        box-shadow: 0 8px 0 rgba(6,78,59,.35); cursor: pointer;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 2px; letter-spacing: 0.02em;
       }
+      #tcw-play .tcw-play-emoji { font-size: 64px; line-height: 1; }
       #tcw-play:active { transform: scale(.97); }
-      #tcw-skip {
-        margin-top: 12px; font: inherit; font-weight: 800; font-size: 16px;
-        color: #7C3AED; background: none; border: 0; cursor: pointer;
-        text-decoration: underline; min-height: 44px;
+      #tcw-grownups-toggle {
+        margin-top: 16px; font: inherit; font-weight: 700; font-size: 14px;
+        color: #78716c; background: none; border: 0; cursor: pointer;
+        text-decoration: underline; min-height: 40px; opacity: .85;
       }
+      #tcw-grownups-panel { margin-top: 10px; text-align: left; }
+      #tcw-grownups-panel[hidden] { display: none !important; }
+      #tcw-gate-form button[type="submit"] {
+        width: 100%; margin-top: 10px; min-height: 48px;
+        font: inherit; font-size: 18px; font-weight: 800; color: #fff;
+        background: #7c3aed; border: 0; border-radius: 999px;
+        box-shadow: 0 4px 0 rgba(76,29,149,.35); cursor: pointer;
+      }
+      #tcw-skip { display: none !important; }
       #tcw-gate .tcw-credit { margin-top: 14px; font-size: 13px; font-weight: 700; opacity: .55; }
       #tcw-gate .tcw-credit a { color: inherit; }
       /* Developer credit — sits at the very end of the page, below the app. */
@@ -147,7 +160,7 @@
     </style>
   </head>
   <body>
-    <!-- Toba's Coloring World — STANDALONE WEB APP (build 2026-10-25-gateway1).
+    <!-- Toba's Coloring World — STANDALONE WEB APP (build 2026-10-30-fix1-playnow).
          This page plus the assets/ folder next to it IS the whole app:
          it is packaged for independent hosting (GitHub Pages) and runs
          with no platform wrapper, no account, no sign-in and no
@@ -170,7 +183,7 @@
          with chunky neon markers (rainbow + 8 neon colors), a big
          eraser, undo, clear and save; saved glow drawings go into the
          same on-device gallery as every other drawing.
-         AUDIO (gateway build 2026-10-25-gateway1): every spoken event
+         AUDIO (gateway build 2026-10-30-fix1-playnow): every spoken event
          routes through ONE gateway (window.__TCW_GW, installed before
          the app loads). In Somali mode the gateway may only play the
          event's registered Ubax recording via Web Audio, or stay
@@ -180,15 +193,22 @@
     <div id="tcw-gate" hidden>
       <div class="tcw-card">
         <div class="tcw-lion" aria-hidden="true">🦁</div>
-        <h1>Welcome to Coloring World!</h1>
-        <p>Leo and his friends want to say hello.<br />What&rsquo;s your name? &middot; Magacaa?</p>
-        <form id="tcw-gate-form">
-          <label for="tcw-name-input">My name is&hellip;</label>
-          <input id="tcw-name-input" type="text" maxlength="24" autocomplete="off"
-                 autocapitalize="words" enterkeyhint="go" placeholder="Type your name" />
-          <button id="tcw-play" type="submit">Let&rsquo;s Play! 🎨</button>
-        </form>
-        <button id="tcw-skip" type="button">Just play &rarr;</button>
+        <h1>Coloring World!</h1>
+        <p>Tap Play to start the games!<br />Taabo Play si aad u bilowdo!</p>
+        <button id="tcw-play" type="button" aria-label="Play — start the games with sound">
+          <span class="tcw-play-emoji" aria-hidden="true">▶️</span>
+          <span>Play!</span>
+        </button>
+        <button id="tcw-grownups-toggle" type="button">Grown-ups: set a name</button>
+        <div id="tcw-grownups-panel" hidden>
+          <form id="tcw-gate-form">
+            <label for="tcw-name-input">My name is&hellip; · Magacaa?</label>
+            <input id="tcw-name-input" type="text" maxlength="24" autocomplete="off"
+                   autocapitalize="words" enterkeyhint="go" placeholder="Type your name" />
+            <button type="submit">Save name &amp; play</button>
+          </form>
+        </div>
+        <button id="tcw-skip" type="button" hidden aria-hidden="true">Just play &rarr;</button>
         <p class="tcw-credit">Made by <b>Abdirashid Abi</b></p>
       </div>
     </div>
@@ -207,7 +227,7 @@
     <footer id="tcw-footer">
       <p class="tcw-made">💛 Made for kids, with love</p>
       <p class="tcw-dev">Developed by <b>Abdirashid Abi</b></p>
-      <p class="tcw-dev" id="tcw-buildstamp">Build 2026-10-25-gateway1</p>
+      <p class="tcw-dev" id="tcw-buildstamp">Build 2026-10-30-fix1-playnow</p>
       <div id="tcw-install" hidden>
         <button id="tcw-install-btn" type="button">📲 Add Coloring World to your Home Screen</button>
         <p id="tcw-install-tip" hidden></p>
@@ -262,7 +282,7 @@
 
     <script>
       /* ================================================================
-         SINGLE AUDIO GATEWAY — build 2026-10-25-gateway1.
+         SINGLE AUDIO GATEWAY — build 2026-10-30-fix1-playnow.
          The ONLY speech enforcement in the app (panel verdict, round 3:
          stop patching around the edges; route everything through one
          gateway and make Somali recorded-only BY CONSTRUCTION).
@@ -308,7 +328,7 @@
          is stamped in the footer and injected into Grown-ups.
          ================================================================ */
       (function () {
-        var BUILD_ID = "2026-10-25-gateway1";
+        var BUILD_ID = "2026-10-30-fix1-playnow";
         window.__TCW_BUILD = BUILD_ID;
 
         var GW = {
@@ -920,7 +940,7 @@
           var gate = document.getElementById("tcw-gate");
           if (gate) gate.hidden = true;
           var s = document.createElement("script");
-          s.src = "assets/app.js?build=" + (window.__TCW_BUILD || "2026-10-25-gateway1");
+          s.src = "assets/app.js?build=" + (window.__TCW_BUILD || "2026-10-30-fix1-playnow");
           document.body.appendChild(s);
         }
 
@@ -1022,9 +1042,49 @@
           });
         }
 
+        function unlockAudioNow() {
+          // Must run inside the child's Play tap so AudioContext + HTML
+          // media stay unlocked when the React app mounts a moment later.
+          try {
+            var AC = window.AudioContext || window.webkitAudioContext;
+            if (!window.__TCW_SHARED_ACTX && AC) {
+              window.__TCW_SHARED_ACTX = new AC();
+            }
+            var ctx = window.__TCW_SHARED_ACTX;
+            if (ctx && ctx.state === "suspended") { try { ctx.resume(); } catch (e) {} }
+            if (ctx) {
+              try {
+                var buf = ctx.createBuffer(1, 1, 22050);
+                var src = ctx.createBufferSource();
+                src.buffer = buf;
+                src.connect(ctx.destination);
+                src.start(0);
+              } catch (e) {}
+            }
+          } catch (e) {}
+          try {
+            var silent = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
+            var a = new Audio(silent);
+            a.volume = 0.01;
+            var p = a.play();
+            if (p && p.catch) p.catch(function () {});
+            window.__TCW_SILENT_AUDIO = a;
+          } catch (e) {}
+        }
+
+        function armPlayNow() {
+          try {
+            window.__TCW_PLAYNOW = { to: "games", sound: true, t: Date.now() };
+            window.sessionStorage.setItem("tcw-playnow", "1");
+            window.localStorage.setItem("tcw-startcard", "seen");
+          } catch (e) {}
+        }
+
         function showGate(db) {
           var gate = document.getElementById("tcw-gate");
           var input = document.getElementById("tcw-name-input");
+          var panel = document.getElementById("tcw-grownups-panel");
+          var toggle = document.getElementById("tcw-grownups-toggle");
           gate.hidden = false;
           function finish(name) {
             markChosen();
@@ -1033,13 +1093,37 @@
             // can change it any time in Grown-ups.
             saveName(db, name || "Friend").then(function () { loadApp(); });
           }
+          function playNow(name) {
+            unlockAudioNow();
+            armPlayNow();
+            finish(name || "");
+          }
+          document.getElementById("tcw-play").addEventListener("pointerdown", function () {
+            unlockAudioNow();
+          }, { once: true });
+          document.getElementById("tcw-play").addEventListener("click", function () {
+            playNow("");
+          });
+          if (toggle && panel) {
+            toggle.addEventListener("click", function () {
+              var open = panel.hasAttribute("hidden");
+              if (open) {
+                panel.removeAttribute("hidden");
+                toggle.textContent = "Grown-ups: hide name";
+                try { input.focus(); } catch (e) {}
+              } else {
+                panel.setAttribute("hidden", "");
+                toggle.textContent = "Grown-ups: set a name";
+              }
+            });
+          }
           document.getElementById("tcw-gate-form").addEventListener("submit", function (ev) {
             ev.preventDefault();
             var name = (input.value || "").replace(/[<>&"]/g, "").trim().slice(0, 24);
-            finish(name);
+            playNow(name);
           });
-          document.getElementById("tcw-skip").addEventListener("click", function () { finish(""); });
-          try { input.focus(); } catch (e) {}
+          var skip = document.getElementById("tcw-skip");
+          if (skip) skip.addEventListener("click", function () { playNow(""); });
         }
 
         // Fail-open: anything unexpected (no IndexedDB, blocked, slow)
