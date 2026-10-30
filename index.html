@@ -1123,6 +1123,17 @@
         });
       })();
     </script>
+    <script>
+      /* Offline support: register SW with relative URL + scope for GitHub Pages /tobas-coloring-world/ */
+      (function () {
+        if (!("serviceWorker" in navigator)) return;
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("sw.js", { scope: "./" }).catch(function (err) {
+            console.warn("TCW service worker registration failed:", err);
+          });
+        });
+      })();
+    </script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "eba91a29a157438fa8e3d8ebedfb2f0b"}'></script><!-- End Cloudflare Web Analytics -->
   </body>
 </html>
